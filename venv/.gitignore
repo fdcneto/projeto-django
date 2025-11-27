@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# Banco de dados local (geralmente não se sobe)
+db.sqlite3
+
+# Pasta do ambiente virtual
+venv/
+env/
+.env
