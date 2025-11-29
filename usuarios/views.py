@@ -76,4 +76,5 @@ class UsuarioListAPIView(APIView):
 				return Response({
 					'erros': serializer.errors
 				}, status=status.HTTP_400_BAD_REQUEST)
+			
 						
