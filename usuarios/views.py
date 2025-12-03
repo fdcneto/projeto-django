@@ -1,97 +1,51 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+
 # esse import é como vamos usar a rota
 from rest_framework.response import Response
+
 # esse import é como vamos dar a resposta
+from rest_framework.decorators import action
+
+# esse import é para criar rotas extras
+from rest_framework.permissions import AllowAny
+
+# esse import mexe com permissões
+# (quem pode usar as rotas)
+
 
 from usuarios.models import Usuario
-from usuarios.serializers import UsuarioSerializer
-
-class UsuarioViewSet(viewsets.ModelViewSet):
-	# apresente o modelo do banco, junto com
-	# todas as entradas (todos os objetos)
-	queryset = Usuario.objects.all()
-	# regras do jogo: quais restrições que cada rota irá ter
-	serializer_class = UsuarioSerializer
-	
-
-	"""
-	GET - listar usuarios
-	POST - Criar novo usuario
-	"""
-	def get(self, request):
-
-		usuarios = Usuario.objects.all()
-		serializer = UsuarioSerializer(usuarios, many=True)
-		return Response({
-			'dados': serializer.data,
-			'total': len(serializer.data)
-		})
-	
-	def post(self, request):
-
-		# Passo 1 - receber/analisar os dados
-		serializer = UsuarioSerializer(
-			data=request.data
-		)
-		# Desserializar (JSON -> Python)
-		# valida
-		if serializer.is_valid():
-			usuario = serializer.save()
-
-			return Response({
-				'mensagem': 'Usuário criado com sucesso',
-				'usuario': UsuarioSerializer(usuario).data
-			}, status=status.HTTP_201_CREATED)
-		
-		# se foi inválido, retorno o erro
-		return Response({
-			'erro':serializer.errors
-		}, status=status.HTTP_400_BAD_REQUEST)
+from usuarios.serializers import UsuarioSerializer, LoginSerializer, CadastroSerializer
 
 
-class UsuarioDetalhesAPIView(APIView):
-	"""
-	GET 	- Buscar um usuario\n
-	PATCH 	- Atualizar \n
-	DELETE 	- Deletar\n
-	"""
-	# função auxiliar para pegar o usuario
-	def get_object(self, id_usuario):
-		return get_object_or_404(
-			Usuario, id=id_usuario)
-	
-	def get(self, request, id):
-		usuario = self.get_object(id)
-		serializer = UsuarioSerializer(usuario)
+class UsuarioViewSets(viewsets.ModelViewSet):
+    # apresente o modelo do banco, junto com
+    # todas as entradas (todos os objetos)
+    queryset = Usuario.objects.all()
+    # regras do jogo: quais restrições que cada
+    # rota irá ter
+    serializer_class = UsuarioSerializer
+    permission_classes = [AllowAny]
 
-		return Response(serializer.data)
-	
-	def patch(self, request, id):
-		usuario = self.get_object(id)
-		# 1 -> passa o usuario
-		# 2 -> passa o(s) campo(s) mudado(s)
+    # criar rotas extras -> ideia de usuarios/rota
 
+    # action de cadastro (não é necessario,
+    # mas fica mais organizado)
 
+    @action(detail=False, methods=["post"], url_path="cadastro")
+    def cadastro(self, request):
+        # passando os dados do cadastro para
+        # o serializer validar
+        serializer = CadastroSerializer(data=request.data)
 
+        if serializer.is_valid():
+            # cadastrar -> criar o usuario no banco
+            usuario = serializer.save()
+            return Response(
+                {
+                    "mensagem": "Usuario cadastrado com sucesso",
+                    "usuario": UsuarioSerializer(usuario).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
 
-
-		# 3 -> avisa que pode atualizar só parte
-		serializer = UsuarioSerializer(
-			usuario,
-			data=request.data,
-			partial=True
-		)
-		# validar
-		if serializer.is_valid():
-			serializer.save()
-			return Response({
-				'mensagem': 'Usuário atualizado com sucesso',
-				'usuario': serializer.data
-			}, status=status.HTTP_200_OK)
-		
-		# caminho triste - falhou atualização
-		return Response(
-			serializer.errors,
-			status=status.HTTP_400_BAD_REQUEST
-		)
-
+        return Response({"erro": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
