@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.hashers \
-    import make_password, check_password
+from django.contrib.auth.hashers import make_password, check_password
 
 class Usuario(models.Model):
     
@@ -60,3 +59,27 @@ class Usuario(models.Model):
         # se a senha for criada ou atualizada
         # chama o save da superclasse
         super().save(*args, **kwargs)
+
+    # criar a verificação se o usuário está autenticado
+    # Isso faz com que qualquer instancia (objeto) desse 
+    # modelo seja considerada autenticada pelo Django
+
+    @property
+    def is_authenticated(self):
+        '''
+        Retorna True sempre, pois objetos (usuario) só existem
+        se autenticados
+        '''
+        return True
+    
+    @property
+    def is_anonymous(self):
+        '''
+        Retorna False sempre, pois não aceita objeto (usuario)
+        anonimo 
+        Isso informa ao Django que esse objeto não é do tipo
+        especial "AnonymousUser" (que representa usuários não
+        logados)
+        '''
+        return False
+

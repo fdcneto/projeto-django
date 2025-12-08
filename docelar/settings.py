@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +31,6 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,16 +38,56 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
 	# o que vc usa que ja esta pronto
 	'rest_framework',
+    'rest_framework_simplejwt',
 	# o que vc cria
 	'usuarios',
 ]
 
 REST_FRAMEWORK = {
 	'DEFAULT_PAGINATION_CLASS': 
-	'rest_framework.pagination.PageNumberPagination'
-	, 'PAGE_SIZE': 10 }
+	'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'usuarios.authentication.CustomJWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',  # ← JWT
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # ← Default
+    ),
+}
+
+
+# ============================================
+# Configurações do JWT
+# ============================================
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=5),  # Token válido por 5 horas, é o token principal usado nas requisições
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Refresh válido por 1 dia, serve para pedir novos access tokens sem precisar logar de novo
+    'ROTATE_REFRESH_TOKENS': False, # se fosse True, cada vez que o usuário pedisse um novo token, ele receberia novo refresh.
+    'BLACKLIST_AFTER_ROTATION': False, # define se o refresh token antigo deve ser invalidado quando um novo token é emitido.
+    # sobre rotate refresh token -> True = maior segurança, False = menor segurança
+    # quando é True, cada vez que o usuário pedisse um novo token, ele receberia novo refresh.
+    # ai a ideia é que o refresh token antigo seja invalidado quando um novo token é emitido.
+    # por isso deve ativar o blacklist_after_rotation = True
+    'UPDATE_LAST_LOGIN': False,
+
+    'ALGORITHM': 'HS256',  # Algoritmo usado para assinar o token
+    'SIGNING_KEY': SECRET_KEY,  # Chave usada para assinar o token
+    'VERIFYING_KEY': None,  # É a chave pública usada para verificar tokens quando você usa algoritmos assimétricos (como RS256).
+    'AUDIENCE': None, # É um campo opcional dentro do JWT que diz para qual público o token é destinado.
+    'ISSUER': None, # Define quem emitiu o token
+
+    'AUTH_HEADER_TYPES': ('Bearer',), # Define o cabeçalho usado para autenticação
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION', 
+    'USER_ID_FIELD': 'id', # Define o campo usado para identificar o usuário
+    'USER_ID_CLAIM': 'user_id', # e qual chave aparece dentro do JWT (user_id)
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',), # Define o token usado para autenticação
+    'TOKEN_TYPE_CLAIM': 'token_type', 
+}
 
 
 MIDDLEWARE = [
