@@ -42,8 +42,10 @@ INSTALLED_APPS = [
 	# o que vc usa que ja esta pronto
 	'rest_framework',
     'rest_framework_simplejwt',
-	# o que vc cria
+	'corsheaders',
+    # o que vc cria
 	'usuarios',
+    # produtos
 ]
 
 REST_FRAMEWORK = {
@@ -92,6 +94,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -100,6 +103,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Configuração do CORS
+
+# Só faça isso em Desenvolvimento
+CORS_ORIGIN_ALLOW_ALL = True
+
+Faça isso na Produção
+CORS_ALLOWED_ORIGINS = [
+ #   'http://localhost:3000', #usando React
+ #   'http://meusite.com.br',
+]
 ROOT_URLCONF = 'docelar.urls'
 
 TEMPLATES = [
