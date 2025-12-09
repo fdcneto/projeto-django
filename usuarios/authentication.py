@@ -1,5 +1,4 @@
-from rest_framework_simplejwt.authentication \ 
-import JWTAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 # autenticação original, 
 # isso vc vai herdar e modificar
 from rest_framework.exceptions import \

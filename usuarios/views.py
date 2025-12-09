@@ -33,7 +33,7 @@ class UsuarioViewSets(viewsets.ModelViewSet):
         -- update, partial_update, destroy (delete): privado (IsAuthenticated)
         '''
         if self.action in ['cadastro', 'login',
-            'list', 'retrieve']:
+            'list', 'retrieve', 'refresh_token']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
@@ -123,9 +123,21 @@ class UsuarioViewSets(viewsets.ModelViewSet):
         
         try:
             refresh = RefreshToken(refresh_token)
+            user_id = refresh['user_id']
+
+            usuario = Usuario.objects.get(id=user_id)
+            
+            # Gerar novo token de acesso forçando o JWT
+            # pelo fato de impedir que ele volte a buscar
+            # no auth_user
+
+            from rest_framework_simplejwt.tokens import \
+            AccessToken
+
+            new_token_access = AccessToken.for_user(usuario)
 
             return Response({
-                'access':str(refresh.access_token)
+                'access':str(new_token_access)
             }, status=status.HTTP_200_OK)
         except TokenError:
             return Response({
@@ -189,3 +201,26 @@ class UsuarioViewSets(viewsets.ModelViewSet):
         return Response({
             'erro': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'],
+            url_path='perfil',
+            permission_classes=[IsAuthenticated])
+    def perfil(self, request):
+        '''
+        Retorna as informações do perfil do usuário autenticado
+        '''
+        # Pegar o id do usuario dentro do token
+        user_id = request.auth.payload.get('user_id')
+
+        try:
+            # ir no banco, achar o user_id lá
+
+            usuario = Usuario.objects.get(id=user_id)
+            serializer = UsuarioSerializer(usuario)
+
+            return Response(serializer.data,
+                            status=status.HTTP_200_OK)
+        except Usuario.DoesNotExist:
+            return Response({
+                'erro':'Usuário não encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
